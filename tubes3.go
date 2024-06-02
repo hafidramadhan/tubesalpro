@@ -5,6 +5,9 @@ import (
 	"time"
 )
 
+const maxBarang = 100    // Ukuran maksimum array barang
+const maxTransaksi = 100 // Ukuran maksimum array transaksi
+
 // Definisikan struktur data untuk barang
 type Barang struct {
 	Kode  string
@@ -17,90 +20,115 @@ type Barang struct {
 type Transaksi struct {
 	Nomor   int
 	Tanggal string
-	Barang  []Barang
+	Barang  [maxBarang]Barang
 	Total   float64
 }
 
-// Modul Barang
-func TambahBarang(barang *[]Barang, kode, nama string, harga float64, stok int) {
-	newBarang := Barang{Kode: kode, Nama: nama, Harga: harga, Stok: stok}
-	*barang = append(*barang, newBarang)
-}
+// Inisialisasi array barang dan array transaksi
+var daftarBarang [maxBarang]Barang
+var daftarTransaksi [maxTransaksi]Transaksi
 
-func EditBarang(barang *[]Barang, kode, nama string, harga float64, stok int) {
-	index := CariBarangSequential(*barang, kode)
-	if index != -1 {
-		(*barang)[index].Nama = nama
-		(*barang)[index].Harga = harga
-		(*barang)[index].Stok = stok
-		fmt.Println("Barang berhasil diubah.")
-	} else {
-		fmt.Println("Barang tidak ditemukan.")
-	}
-}
-
-func HapusBarang(barang *[]Barang, kode string) {
-	index := CariBarangSequential(*barang, kode)
-	if index != -1 {
-		*barang = append((*barang)[:index], (*barang)[index+1:]...)
-		fmt.Println("Barang berhasil dihapus.")
-	} else {
-		fmt.Println("Barang tidak ditemukan.")
-	}
-}
-
-// Modul Transaksi
-func CatatTransaksi(transaksi *[]Transaksi, nomor int, barang []Barang, total float64) {
-	newTransaksi := Transaksi{Nomor: nomor, Tanggal: time.Now().Format("2006-01-02"), Barang: barang, Total: total}
-	*transaksi = append(*transaksi, newTransaksi)
-}
-
-func TampilkanDaftarTransaksi(transaksi []Transaksi) {
-	if len(transaksi) == 0 {
-		fmt.Println("Belum ada transaksi yang dicatat.")
-		return
-	}
-
-	fmt.Println("Daftar Transaksi:")
-	for _, tr := range transaksi {
-		fmt.Printf("Nomor Transaksi: %d\n", tr.Nomor)
-		fmt.Printf("Tanggal: %s\n", tr.Tanggal)
-		fmt.Println("Barang yang dibeli:")
-		for _, brg := range tr.Barang {
-			fmt.Printf("- %s (%s) x %d = %.2f\n", brg.Nama, brg.Kode, brg.Stok, brg.Harga*float64(brg.Stok))
+// Fungsi untuk menambahkan barang baru ke dalam daftar barang
+func TambahBarang(kode, nama string, harga float64, stok int) {
+	for i := 0; i < maxBarang; i++ {
+		if daftarBarang[i].Kode == "" {
+			daftarBarang[i] = Barang{Kode: kode, Nama: nama, Harga: harga, Stok: stok}
+			fmt.Println("Barang berhasil ditambahkan.")
+			return
 		}
-		fmt.Printf("Total: %.2f\n", tr.Total)
-		fmt.Println("========================================")
+	}
+	fmt.Println("Daftar barang sudah penuh.")
+}
+
+// Fungsi untuk mengubah data barang berdasarkan kode barang
+func UbahBarang(kode, nama string, harga float64, stok int) {
+	for i := 0; i < maxBarang; i++ {
+		if daftarBarang[i].Kode == kode {
+			daftarBarang[i].Nama = nama
+			daftarBarang[i].Harga = harga
+			daftarBarang[i].Stok = stok
+			fmt.Println("Barang berhasil diubah.")
+			return
+		}
+	}
+	fmt.Println("Barang tidak ditemukan.")
+}
+
+// Fungsi untuk menghapus data barang berdasarkan kode barang
+func HapusBarang(kode string) {
+	for i := 0; i < maxBarang; i++ {
+		if daftarBarang[i].Kode == kode {
+			for j := i; j < maxBarang-1; j++ {
+				daftarBarang[j] = daftarBarang[j+1]
+			}
+			daftarBarang[maxBarang-1] = Barang{} // Menghapus data terakhir
+			fmt.Println("Barang berhasil dihapus.")
+			return
+		}
+	}
+	fmt.Println("Barang tidak ditemukan.")
+}
+
+// Fungsi untuk mencatat transaksi
+func CatatTransaksi(nomor int, barang [maxBarang]Barang, total float64) {
+	for i := 0; i < maxTransaksi; i++ {
+		if daftarTransaksi[i].Nomor == 0 {
+			daftarTransaksi[i] = Transaksi{Nomor: nomor, Tanggal: time.Now().Format("2006-01-02"), Barang: barang, Total: total}
+			fmt.Println("Transaksi berhasil dicatat.")
+			return
+		}
+	}
+	fmt.Println("Daftar transaksi sudah penuh.")
+}
+
+// Fungsi untuk menampilkan daftar transaksi
+func TampilkanDaftarTransaksi() {
+	fmt.Println("\nDaftar Transaksi:")
+	for _, transaksi := range daftarTransaksi {
+		if transaksi.Nomor != 0 {
+			fmt.Printf("Nomor Transaksi: %d\n", transaksi.Nomor)
+			fmt.Printf("Tanggal: %s\n", transaksi.Tanggal)
+			fmt.Println("Barang yang dibeli:")
+			for _, barang := range transaksi.Barang {
+				if barang.Kode != "" {
+					fmt.Printf("- %s (%s) x %d = %.2f\n", barang.Nama, barang.Kode, barang.Stok, barang.Harga*float64(barang.Stok))
+				}
+			}
+			fmt.Printf("Total: %.2f\n", transaksi.Total)
+			fmt.Println("========================================")
+		}
 	}
 }
 
-func HitungOmzetHarian(transaksi []Transaksi, tanggal string) float64 {
+// Fungsi untuk menghitung omzet harian
+func HitungOmzetHarian(tanggal string) float64 {
 	var omzet float64
-	for _, tr := range transaksi {
-		if tr.Tanggal == tanggal {
-			omzet += tr.Total
+	for _, transaksi := range daftarTransaksi {
+		if transaksi.Nomor != 0 && transaksi.Tanggal == tanggal {
+			omzet += transaksi.Total
 		}
 	}
 	return omzet
 }
 
-// Modul Pencarian
-func CariBarangSequential(data []Barang, kode string) int {
-	for i, brg := range data {
-		if brg.Kode == kode {
+// Fungsi untuk mencari barang berdasarkan kode dengan algoritma sequential search
+func CariBarangSequential(kode string) int {
+	for i, barang := range daftarBarang {
+		if barang.Kode == kode {
 			return i
 		}
 	}
 	return -1
 }
 
-func CariBarangBinary(data []Barang, kode string) int {
-	low, high := 0, len(data)-1
+// Fungsi untuk mencari barang berdasarkan kode dengan algoritma binary search
+func CariBarangBinary(kode string) int {
+	low, high := 0, maxBarang-1
 	for low <= high {
 		mid := (low + high) / 2
-		if data[mid].Kode == kode {
+		if daftarBarang[mid].Kode == kode {
 			return mid
-		} else if data[mid].Kode < kode {
+		} else if daftarBarang[mid].Kode < kode {
 			low = mid + 1
 		} else {
 			high = mid - 1
@@ -109,36 +137,77 @@ func CariBarangBinary(data []Barang, kode string) int {
 	return -1
 }
 
-// Modul Pengurutan
-func SelectionSortBarang(data []Barang, kategori string, ascending bool) {
-	for i := 0; i < len(data)-1; i++ {
+// Fungsi untuk mengurutkan daftar barang berdasarkan kategori dengan algoritma selection sort
+func SelectionSortBarang(kategori string, ascending bool) {
+	for i := 0; i < maxBarang-1; i++ {
 		minIndex := i
-		for j := i + 1; j < len(data); j++ {
-			if (ascending && data[j].Kode < data[minIndex].Kode) || (!ascending && data[j].Kode > data[minIndex].Kode) {
-				minIndex = j
+		for j := i + 1; j < maxBarang; j++ {
+			switch kategori {
+			case "Kode":
+				if (ascending && daftarBarang[j].Kode < daftarBarang[minIndex].Kode) || (!ascending && daftarBarang[j].Kode > daftarBarang[minIndex].Kode) {
+					minIndex = j
+				}
+			case "Nama":
+				if (ascending && daftarBarang[j].Nama < daftarBarang[minIndex].Nama) || (!ascending && daftarBarang[j].Nama > daftarBarang[minIndex].Nama) {
+					minIndex = j
+				}
+			case "Harga":
+				if (ascending && daftarBarang[j].Harga < daftarBarang[minIndex].Harga) || (!ascending && daftarBarang[j].Harga > daftarBarang[minIndex].Harga) {
+					minIndex = j
+				}
+			case "Stok":
+				if (ascending && daftarBarang[j].Stok < daftarBarang[minIndex].Stok) || (!ascending && daftarBarang[j].Stok > daftarBarang[minIndex].Stok) {
+					minIndex = j
+				}
 			}
 		}
-		data[i], data[minIndex] = data[minIndex], data[i]
+		daftarBarang[i], daftarBarang[minIndex] = daftarBarang[minIndex], daftarBarang[i]
 	}
 }
 
-func InsertionSortBarang(data []Barang, kategori string, ascending bool) {
-	for i := 1; i < len(data); i++ {
-		key := data[i]
+// Fungsi untuk mengurutkan daftar barang berdasarkan kategori dengan algoritma insertion sort
+func InsertionSortBarang(kategori string, ascending bool) {
+	for i := 1; i < maxBarang; i++ {
+		key := daftarBarang[i]
 		j := i - 1
-		for j >= 0 && (ascending && data[j].Kode > key.Kode || !ascending && data[j].Kode < key.Kode) {
-			data[j+1] = data[j]
-			j--
+		for j >= 0 {
+			switch kategori {
+			case "Kode":
+				if (ascending && daftarBarang[j].Kode > key.Kode) || (!ascending && daftarBarang[j].Kode < key.Kode) {
+					daftarBarang[j+1] = daftarBarang[j]
+					j--
+				} else {
+					break
+				}
+			case "Nama":
+				if (ascending && daftarBarang[j].Nama > key.Nama) || (!ascending && daftarBarang[j].Nama < key.Nama) {
+					daftarBarang[j+1] = daftarBarang[j]
+					j--
+				} else {
+					break
+				}
+			case "Harga":
+				if (ascending && daftarBarang[j].Harga > key.Harga) || (!ascending && daftarBarang[j].Harga < key.Harga) {
+					daftarBarang[j+1] = daftarBarang[j]
+					j--
+				} else {
+					break
+				}
+			case "Stok":
+				if (ascending && daftarBarang[j].Stok > key.Stok) || (!ascending && daftarBarang[j].Stok < key.Stok) {
+					daftarBarang[j+1] = daftarBarang[j]
+					j--
+				} else {
+					break
+				}
+			}
 		}
-		data[j+1] = key
+		daftarBarang[j+1] = key
 	}
 }
 
+// Fungsi main sebagai titik masuk utama program
 func main() {
-	// Inisialisasi array barang dan array transaksi
-	var daftarBarang []Barang
-	var daftarTransaksi []Transaksi
-
 	// Loop utama program untuk interaksi dengan pengguna
 	for {
 		fmt.Println("\nMenu:")
@@ -167,8 +236,7 @@ func main() {
 			fmt.Scan(&harga)
 			fmt.Print("Masukkan stok barang: ")
 			fmt.Scan(&stok)
-			TambahBarang(&daftarBarang, kode, nama, harga, stok)
-			fmt.Println("Barang berhasil ditambahkan.")
+			TambahBarang(kode, nama, harga, stok)
 		case 2:
 			var kode, nama string
 			var harga float64
@@ -181,18 +249,18 @@ func main() {
 			fmt.Scan(&harga)
 			fmt.Print("Masukkan stok baru barang: ")
 			fmt.Scan(&stok)
-			EditBarang(&daftarBarang, kode, nama, harga, stok)
+			UbahBarang(kode, nama, harga, stok)
 		case 3:
 			var kode string
 			fmt.Print("Masukkan kode barang yang ingin dihapus: ")
 			fmt.Scan(&kode)
-			HapusBarang(&daftarBarang, kode)
+			HapusBarang(kode)
 		case 4:
 			var nomorTransaksi int
 			fmt.Print("Masukkan nomor transaksi: ")
 			fmt.Scan(&nomorTransaksi)
 			var kodeBarang string
-			var barangDibeli []Barang
+			var barangDibeli [maxBarang]Barang
 			var totalTransaksi float64
 			for {
 				fmt.Print("Masukkan kode barang yang dibeli (ketik 'selesai' untuk mengakhiri): ")
@@ -200,26 +268,26 @@ func main() {
 				if kodeBarang == "selesai" {
 					break
 				}
-				index := CariBarangSequential(daftarBarang, kodeBarang)
+				index := CariBarangSequential(kodeBarang)
 				if index == -1 {
 					fmt.Println("Barang tidak ditemukan.")
 				} else {
 					var jumlah int
 					fmt.Printf("Masukkan jumlah %s yang dibeli: ", daftarBarang[index].Nama)
 					fmt.Scan(&jumlah)
-					barangDibeli = append(barangDibeli, daftarBarang[index])
+					barangDibeli[index] = daftarBarang[index]
+					barangDibeli[index].Stok = jumlah
 					totalTransaksi += daftarBarang[index].Harga * float64(jumlah)
 				}
 			}
-			CatatTransaksi(&daftarTransaksi, nomorTransaksi, barangDibeli, totalTransaksi)
-			fmt.Println("Transaksi berhasil dicatat.")
+			CatatTransaksi(nomorTransaksi, barangDibeli, totalTransaksi)
 		case 5:
-			TampilkanDaftarTransaksi(daftarTransaksi)
+			TampilkanDaftarTransaksi()
 		case 6:
 			var tanggal string
 			fmt.Print("Masukkan tanggal untuk menghitung omzet (format: YYYY-MM-DD): ")
 			fmt.Scan(&tanggal)
-			omzet := HitungOmzetHarian(daftarTransaksi, tanggal)
+			omzet := HitungOmzetHarian(tanggal)
 			fmt.Printf("Omzet pada tanggal %s adalah %.2f\n", tanggal, omzet)
 		case 7:
 			fmt.Println("Terima kasih, program selesai.")
